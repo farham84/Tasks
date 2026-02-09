@@ -47,6 +47,7 @@ export default function Login() {
     <h1 style={{ textAlign: "center", marginTop: "2rem", marginBottom: "1rem" }}>
      username: emilys / password: emilyspass
     </h1>
+    <p className="text-center">در صورت اشتباه بودن رمز به جای کپی کردن بنویسید</p>
 
     <Box maxW="sm" mx="auto" mt="20" p="6" borderWidth="1px" borderRadius="md">
       <Heading mb="6" textAlign="center">
