@@ -1,24 +1,27 @@
 "use client"
 
-import { fetchGames, fetchGenres } from "@/app/api/games/route";
 import { useEffect, useState } from "react";
 import GameCard from "./gameCard";
 import { Game } from "./types";
 
-
 export default function TopWeak() {
-
     const [topGames, setTopGames] = useState<Game[]>([]);
 
     useEffect(() => { 
-        
-        fetchGames({ page_size: 4, ordering: "-rating" }).then((data) => {
-          setTopGames(data.results);
-        });
+        const getTopGames = async () => {
+          try {
+            // فراخوانی API داخلی خودمان که قبلاً در route.ts درست کردیم
+            const response = await fetch('/api/games?page_size=4&ordering=-rating');
+            const data = await response.json();
+            setTopGames(data.results);
+          } catch (error) {
+            console.error("Error fetching top games:", error);
+          }
+        };
+
+        getTopGames();
       }, []);
 
-
-    
     return (
         <>
          {topGames.length > 0 && (
@@ -34,12 +37,6 @@ export default function TopWeak() {
           </div>
         </section>
       )}
-
-
-      
         </>
     )
-
-
-    
 }

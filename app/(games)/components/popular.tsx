@@ -1,18 +1,25 @@
 "use client"
 
-import { fetchGames } from "@/app/api/games/route";
 import { useEffect, useState } from "react";
 import GameCard from "./gameCard";
 import { Game } from "./types";
-
 
 export default function TopPopular() {
   const [popularGames, setPopularGames] = useState<Game[]>([]);
 
   useEffect(() => {
-    fetchGames({ page_size: 4, ordering: "-added" }).then((data) => {
-      setPopularGames(data.results);
-    });
+    // به جای ایمپورت، مستقیم به آدرس API خودت درخواست بزن
+    const getGames = async () => {
+      try {
+        const response = await fetch('/api/games?page_size=4&ordering=-added');
+        const data = await response.json();
+        setPopularGames(data.results);
+      } catch (error) {
+        console.error("Error fetching games:", error);
+      }
+    };
+
+    getGames();
   }, []);
 
   return (

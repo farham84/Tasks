@@ -1,12 +1,11 @@
 "use client";
 import React, { useEffect, useState, useMemo, useCallback, useRef } from "react";
-import { fetchGames, fetchGenres } from "./../../api/games/route"; // مسیر ایمپورت شما به نظر درست است اگر ساختار پوشه شما اینگونه باشد
 import debounce from "lodash.debounce";
 import GameCard from "../components/gameCard";
 import TopWeak from "../components/topWeak";
 import TopPopular from "../components/popular";
 import GameListSection from "../components/pagination";
-import { Game, Genre } from "../components/types"; // فرض می‌کنیم Type ها از این مسیر وارد می‌شوند
+import { Game, Genre } from "../components/types";
 
 const pageSize = 20;
 
@@ -19,16 +18,19 @@ export default function Home() {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
 
-  
   const genreScrollRef = useRef<HTMLDivElement>(null);
 
   
   const loadGames = useCallback(async (params: any) => {
     setLoading(true);
     try {
-      const data = await fetchGames(params);
-      setGames(data.results);
-      setTotalPages(Math.ceil(data.count / pageSize));
+      
+      const queryString = new URLSearchParams(params).toString();
+      const response = await fetch(`/api/games?${queryString}`);
+      const data = await response.json();
+      
+      setGames(data.results || []);
+      setTotalPages(Math.ceil((data.count || 0) / pageSize));
     } catch (error) {
       console.error("Failed to fetch games:", error);
       setTotalPages(1);
@@ -37,7 +39,6 @@ export default function Home() {
     }
   }, []);
 
-  
   const debouncedFetch = useMemo(
     () => debounce((params) => loadGames(params), 600),
     [loadGames]
@@ -47,8 +48,8 @@ export default function Home() {
   useEffect(() => {
     const getGenres = async () => {
       try {
-        const genresData = await fetchGenres();
-        
+        const response = await fetch('/api/genres');
+        const genresData = await response.json();
         setGenresList([{ id: 0, name: "All Genres", slug: "" }, ...genresData]);
       } catch (e) {
         console.error("Failed to fetch genres", e);
@@ -57,9 +58,8 @@ export default function Home() {
     getGenres();
   }, []);
 
-  
   useEffect(() => {
-    const params: any = { page: currentPage, page_size: pageSize };
+    const params: any = { page: currentPage.toString(), page_size: pageSize.toString() };
     if (search) params.search = search;
     if (genre) params.genres = genre;
 
@@ -67,7 +67,6 @@ export default function Home() {
     return () => debouncedFetch.cancel();
   }, [search, genre, currentPage, debouncedFetch]);
 
-  
   useEffect(() => {
     const style = document.createElement('style');
     style.innerHTML = `
@@ -81,7 +80,6 @@ export default function Home() {
   const scrollGenres = (direction: 'left' | 'right') => {
     const ref = genreScrollRef.current;
     if (ref) {
-      
       const scrollAmount = ref.clientWidth * 0.8; 
       ref.scrollTo({
         left: ref.scrollLeft + (direction === 'right' ? scrollAmount : -scrollAmount),
@@ -92,34 +90,26 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-[#0f172a] text-slate-200 p-4 md:p-10 font-sans selection:bg-purple-500/30">
-      
-      {/* Header */}
       <header className="max-w-3xl mx-auto text-center mb-20 pt-14 px-4">
         <h1 className="relative text-4xl md:text-8xl font-extrabold italic mb-6 leading-[0.95]">
           <span className="block bg-gradient-to-r from-purple-400 via-pink-500 to-red-500 bg-clip-text text-transparent tracking-[-0.03em] drop-shadow-[0_6px_20px_rgba(168,85,247,0.35)]">
             jojo
           </span>
-
           <span className="block text-white tracking-[-0.015em]">
             Game Hub
           </span>
         </h1>
-
         <p className="text-slate-400 text-base md:text-lg font-light tracking-wide max-w-xl mx-auto">
-          کشف، مرور و لذت بردن از دنیای بازی‌ها با ما! 🎮✨
+          کشفی، مرور و لذت بردن از دنیای بازی‌ها با ما! 🎮✨
         </p>
       </header>
 
-
-      {/* بخش‌های تاپ و ویک */}
       <TopWeak />
       <TopPopular />
 
       <div className="h-px bg-gradient-to-r from-transparent via-slate-700 to-transparent w-full my-16 max-w-7xl mx-auto" />
 
-      {/* --- FILTER & SEARCH SECTION --- */}
       <div className="max-w-7xl mx-auto mb-12 space-y-8">
-        
         <div className="relative group">
             <div className="absolute inset-0 bg-gradient-to-r from-purple-600 to-pink-600 rounded-2xl blur opacity-25 group-hover:opacity-40 transition duration-500"></div>
             <div className="relative bg-slate-900 border border-slate-700 rounded-2xl flex items-center shadow-xl overflow-hidden">
@@ -136,18 +126,14 @@ export default function Home() {
             </div>
         </div>
 
-        {/* 2. Horizontal Scrollable Genres (REVISED & Enhanced) */}
         <div className="w-full relative flex items-center">
-            
             <button 
                 onClick={() => scrollGenres('left')}
                 className="absolute left-0 z-20 p-3 bg-slate-800/80 hover:bg-slate-700/90 backdrop-blur-sm rounded-full shadow-lg transition duration-300 border border-white/10 ml-2 md:ml-0"
-                aria-label="Scroll Genres Left"
             >
                 <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7"></path></svg>
             </button>
 
-            
             <div 
                 ref={genreScrollRef}
                 className="flex gap-3 overflow-x-scroll pb-4 pt-1 px-14 hide-scrollbar snap-x flex-grow"
@@ -172,23 +158,18 @@ export default function Home() {
                 })}
             </div>
 
-           
             <button 
                 onClick={() => scrollGenres('right')}
                 className="absolute right-0 z-20 p-3 bg-slate-800/80 hover:bg-slate-700/90 backdrop-blur-sm rounded-full shadow-lg transition duration-300 border border-white/10 mr-2 md:mr-0"
-                aria-label="Scroll Genres Right"
             >
                 <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"></path></svg>
             </button>
 
-            
             <div className="absolute left-0 top-0 bottom-0 w-16 bg-gradient-to-r from-[#0f172a] to-transparent z-10 pointer-events-none" />
             <div className="absolute right-0 top-0 bottom-0 w-16 bg-gradient-to-l from-[#0f172a] to-transparent z-10 pointer-events-none" />
         </div>
-
       </div>
 
-      {/* --- Game List Section --- */}
       <GameListSection
         loading={loading}
         games={games}
@@ -196,7 +177,6 @@ export default function Home() {
         totalPages={totalPages}
         onPageChange={setCurrentPage}
       />
-      
     </div>
   );
 }
