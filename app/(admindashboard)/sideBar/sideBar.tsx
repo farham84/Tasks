@@ -1,7 +1,6 @@
 "use client";
 
-import { VStack, Box, Text, Link as ChakraLink, IconButton, Drawer, DrawerOverlay, DrawerContent, DrawerCloseButton, Flex, HStack } from "@chakra-ui/react";
-import { HamburgerIcon } from "@chakra-ui/icons";
+import { VStack, Box, Text, Link as ChakraLink, Drawer, DrawerOverlay, DrawerContent, DrawerCloseButton, HStack } from "@chakra-ui/react";
 import { FaTachometerAlt, FaUsers, FaBoxOpen } from "react-icons/fa";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -41,20 +40,19 @@ export default function DashboardSidebar({ isDrawerOpen, onClose, isMobile }: Da
             color: isActive ? "white" : "purple.700",
           }}
           transition="all 0.3s ease"
-          onClick={onClose} // فقط برای موبایل Drawer
+          onClick={onClose} 
         >
           <HStack spacing={3}>
-            <Box as={item.icon} size="20px" />
+            <Box as={item.icon} />
             <Text fontWeight={isActive ? "bold" : "medium"}>{item.label}</Text>
           </HStack>
         </ChakraLink>
       );
     });
 
-  // موبایل
   if (isMobile) {
     return (
-      <Drawer isOpen={isDrawerOpen} placement="left" onClose={onClose!}>
+      <Drawer isOpen={!!isDrawerOpen} placement="left" onClose={onClose!}>
         <DrawerOverlay />
         <DrawerContent>
           <DrawerCloseButton mt={4} />
@@ -68,7 +66,6 @@ export default function DashboardSidebar({ isDrawerOpen, onClose, isMobile }: Da
     );
   }
 
-  // دسکتاپ
   return (
     <Box
       w={64}

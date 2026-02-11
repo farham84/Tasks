@@ -52,11 +52,16 @@ export default function ProductsPage() {
       try {
         const res = await fetch("https://dummyjson.com/products");
         const data = await res.json();
-        setProducts(data.products);
+        
+        const productsList: Product[] = data.products || [];
+        setProducts(productsList);
 
+        // اصلاح اصلی در این قسمت انجام شده است:
+        // با استفاده از <string> به تایپ‌اسکریپت می‌گوییم خروجی حتما آرایه‌ای از رشته‌هاست
         const uniqueCategories = Array.from(
-          new Set(data.products.map((p: Product) => p.category))
-        );
+          new Set(productsList.map((p: Product) => p.category))
+        ) as string[];
+        
         setCategories(uniqueCategories);
       } catch (err) {
         console.error(err);
