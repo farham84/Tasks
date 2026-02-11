@@ -26,6 +26,7 @@ export default function Home() {
     <main className="min-h-screen bg-gray-50 flex flex-col items-center justify-center px-6 py-16">
 
       {/* NAME */}
+      {/* @ts-ignore */}
       <motion.h1
         initial={{ opacity: 0, y: -30 }}
         animate={{ opacity: 1, y: 0 }}
@@ -36,27 +37,34 @@ export default function Home() {
       </motion.h1>
 
       {/* INTRO */}
-      <p className="text-gray-600 mb-14 text-center max-w-2xl leading-relaxed">
-        این پروژه شامل <span className="font-semibold text-gray-800">۳ تسک فنی مستقل</span> است که به عنوان بخشی از فرآیند ارزیابی فنی پیاده‌سازی شده‌اند.
-        هر تسک روی یک جنبه مشخص از توسعه Front-End تمرکز دارد؛ از کار با API و مدیریت داده‌ها گرفته تا طراحی کامپوننت‌های قابل استفاده مجدد و تجربه کاربری.
+      <div className="text-gray-600 mb-14 text-center max-w-2xl leading-relaxed">
+        <p>
+          این پروژه شامل <span className="font-semibold text-gray-800">۳ تسک فنی مستقل</span> است که به عنوان بخشی از فرآیند ارزیابی فنی پیاده‌سازی شده‌اند.
+        </p>
+        <p className="mt-2">
+          هر تسک روی یک جنبه مشخص از توسعه Front-End تمرکز دارد؛ از کار با API تا طراحی کامپوننت‌های قابل استفاده مجدد.
+        </p>
         <br />
-        لطفاً برای بررسی، یکی از تسک‌ها را انتخاب کنید.
-        <br />
-        <span className="text-2xl text-red-700">توجه داشته باشید که تمامی این تسک ها در دو روز انجام شده و مشاهده شدن باگ های کوچک میتواند عادی باشد</span>
-        <br />
-        <br />
-        <span className="text-2xl text-red-700">(از هیچ قالب اماده ای در تسک ها استفاده نشده است)</span>
-      </p>
+        <p className="text-xl text-red-700 font-bold">
+          توجه داشته باشید که تمامی این تسک‌ها در دو روز انجام شده و مشاهده شدن باگ‌های کوچک می‌تواند عادی باشد.
+        </p>
+        <p className="text-lg text-red-700 font-medium mt-2">
+          (از هیچ قالب آماده‌ای در تسک‌ها استفاده نشده است)
+        </p>
+      </div>
 
       {/* TASKS */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl w-full">
         {tasks.map((task, i) => (
+          /* @ts-ignore */
           <motion.div
             key={i}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: i * 0.15 }}
-            className="bg-white rounded-2xl shadow-md p-7 hover:shadow-xl transition flex flex-col"
+            {...({
+              initial: { opacity: 0, y: 20 },
+              animate: { opacity: 1, y: 0 },
+              transition: { delay: i * 0.15 },
+              className: "bg-white rounded-2xl shadow-md p-7 hover:shadow-xl transition flex flex-col"
+            } as any)}
           >
             <h2 className="text-xl font-semibold mb-3 text-gray-900">
               {task.title}
@@ -70,7 +78,7 @@ export default function Home() {
               href={task.href}
               className="inline-block self-start bg-purple-600 text-white px-6 py-2.5 rounded-lg hover:bg-purple-700 transition font-medium"
             >
-              مشاهده تسک →
+              مشاهده تسک ←
             </Link>
           </motion.div>
         ))}

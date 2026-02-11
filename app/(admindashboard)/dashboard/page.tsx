@@ -18,8 +18,6 @@ import {
   Th,
   Td,
   Spinner,
-  VStack,
-  HStack,
   Heading,
   Badge,
   Flex,
@@ -50,7 +48,6 @@ interface Product {
   discountPercentage?: number;
 }
 
-// داده فرضی بازدید سایت
 const visitData = [
   { day: "شنبه", visits: 120 },
   { day: "یک‌شنبه", visits: 200 },
@@ -83,8 +80,8 @@ export default function Dashboard() {
         const usersData = await usersRes.json();
         const productsData = await productsRes.json();
 
-        setUsers(usersData.users);
-        setProducts(productsData.products);
+        setUsers(usersData.users || []);
+        setProducts(productsData.products || []);
       } catch (err) {
         console.error(err);
       } finally {
@@ -124,35 +121,34 @@ export default function Dashboard() {
             value: users.length,
             icon: FaUsers,
             color: "purple.50",
-            gradient: "linear(to-r, purple.400, purple.600)",
           },
           {
             label: "محصولات",
             value: products.length,
             icon: FaBoxOpen,
             color: "blue.50",
-            gradient: "linear(to-r, blue.400, blue.600)",
           },
           {
             label: "محصولات تخفیف‌دار",
             value: discountedProducts.length,
             icon: FaTags,
             color: "green.50",
-            gradient: "linear(to-r, green.400, green.600)",
           },
           {
             label: "محصولات جدید",
             value: latestProducts.length,
             icon: FaRocket,
             color: "pink.50",
-            gradient: "linear(to-r, pink.400, pink.600)",
           },
         ].map((stat, idx) => (
+          /* @ts-ignore */
           <motion.div
             key={idx}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: idx * 0.2 }}
+            {...({
+              initial: { opacity: 0, y: 20 },
+              animate: { opacity: 1, y: 0 },
+              transition: { delay: idx * 0.2 }
+            } as any)}
           >
             <Stat
               px={4}
