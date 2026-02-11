@@ -10,7 +10,7 @@ import {
   MagnifyingGlassIcon,
 } from '@heroicons/react/20/solid';
 import { useVirtualizer } from '@tanstack/react-virtual';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import clsx from 'clsx';
 
 // --- Types ---
@@ -27,10 +27,10 @@ const OPTIONS: Option[] = Array.from({ length: 600 }).map((_, i) => ({
   group: i < 200 ? 'front end' : i < 400 ? 'back end' : 'devops',
 }));
 
-const GROUP_COLORS: Record<string, string> = {
-  'front end': 'bg-fuchsia-100 text-fuchsia-700',
-  'back end': 'bg-emerald-100 text-emerald-700',
-  'devops': 'bg-sky-100 text-sky-700',
+const GROUP_CONFIG: Record<string, { bg: string; text: string; dot: string }> = {
+  'front end': { bg: 'bg-fuchsia-50', text: 'text-fuchsia-700', dot: 'bg-fuchsia-500' },
+  'back end': { bg: 'bg-emerald-50', text: 'text-emerald-700', dot: 'bg-emerald-500' },
+  'devops': { bg: 'bg-sky-50', text: 'text-sky-700', dot: 'bg-sky-500' },
 };
 
 export default function AdvancedDropdown() {
@@ -75,115 +75,145 @@ export default function AdvancedDropdown() {
   const isChecked = (id: number) => selected.some(s => s.id === id);
   const toggleGroup = (group: string) => setCollapsedGroups(prev => ({ ...prev, [group]: !prev[group] }));
 
-  const triggerText = useMemo(() => {
-    if (!selected.length) return 'مهارت‌ها را انتخاب کنید';
-    if (selected.length === 1) return selected[0].label;
-    return `${selected.length} مهارت انتخاب شده است`;
-  }, [selected]);
-
   return (
-    <div className="min-h-screen flex items-start justify-center bg-gray-50 pt-16 font-sans" dir="rtl">
+    <div className="min-h-screen flex items-start justify-center bg-slate-50 pt-16 font-sans selection:bg-indigo-100" dir="rtl">
       <Listbox value={selected} onChange={setSelected} multiple>
-        <div className="relative w-[640px] z-[100]">
-          <Listbox.Button className="flex w-full items-center justify-between rounded-xl border border-gray-300 bg-white px-5 py-3 text-base text-gray-800 shadow-lg transition-all duration-200 hover:shadow-xl focus:border-indigo-500 focus:ring-4 focus:ring-indigo-200/50 active:scale-[0.99]">
-            <span className="truncate">{triggerText}</span>
-            <ChevronUpDownIcon className="h-5 w-5 text-gray-400" />
+        <div className="relative w-full max-w-[720px] px-4 z-[100]">
+          {/* Trigger Button */}
+          <Listbox.Button className="group flex w-full items-center justify-between rounded-2xl border-2 border-white bg-white/80 px-6 py-4 text-right shadow-[0_8px_30px_rgb(0,0,0,0.04)] backdrop-blur-xl transition-all hover:border-indigo-300 hover:shadow-indigo-100 focus:outline-none focus:ring-4 focus:ring-indigo-500/10">
+            <div className="flex flex-col items-start gap-1">
+              <span className="text-xs font-bold uppercase tracking-wider text-slate-400">مهارت‌های مورد نظر</span>
+              <span className="text-base font-semibold text-slate-700">
+                {selected.length === 0 ? 'یک یا چند مورد انتخاب کنید' : `${selected.length} مهارت انتخاب شده`}
+              </span>
+            </div>
+            <ChevronUpDownIcon className="h-6 w-6 text-slate-400 transition-colors group-hover:text-indigo-500" />
           </Listbox.Button>
 
           <Transition
             as={Fragment}
-            enter="transition ease-out duration-200"
-            enterFrom="opacity-0 translate-y-2"
-            enterTo="opacity-100 translate-y-0"
-            leave="transition ease-in duration-150"
-            leaveFrom="opacity-100 translate-y-0"
-            leaveTo="opacity-0 translate-y-2"
+            enter="transition ease-out duration-300"
+            enterFrom="opacity-0 translate-y-4 scale-95"
+            enterTo="opacity-100 translate-y-0 scale-100"
+            leave="transition ease-in duration-200"
+            leaveFrom="opacity-100 translate-y-0 scale-100"
+            leaveTo="opacity-0 translate-y-4 scale-95"
           >
-            <Listbox.Options className="fixed top-[120px] z-50 w-[640px] origin-top overflow-hidden rounded-3xl border border-gray-200 bg-white shadow-[0_20px_50px_rgba(0,0,0,0.15)] backdrop-blur-sm p-4">
+            <Listbox.Options className="absolute mt-4 w-[calc(100%-32px)] overflow-hidden rounded-[2rem] border border-white bg-white/90 shadow-[0_20px_50px_rgba(0,0,0,0.1)] backdrop-blur-2xl">
               
-              <div className="flex items-center gap-3 border-b border-gray-100 px-2 py-2">
-                <MagnifyingGlassIcon className="h-5 w-5 text-gray-400" />
-                <input
-                  value={search}
-                  onChange={e => setSearch(e.target.value)}
-                  placeholder="جستجو در مهارت‌ها..."
-                  className="w-full bg-transparent text-base text-gray-800 outline-none placeholder:text-gray-400"
-                />
-                {search && (
-                  <button onClick={() => setSearch('')} className="text-gray-400 hover:text-red-500 transition">
-                    <XMarkIcon className="h-5 w-5" />
-                  </button>
-                )}
-              </div>
-
-              <div className="flex justify-between px-2 py-2 text-sm text-gray-500 border-b border-gray-100">
-                <button type="button" onClick={handleToggleAll} className="font-semibold text-indigo-600 hover:text-indigo-800 transition">
-                  {selected.length === allFiltered.length ? 'پاک کردن همه' : 'انتخاب همه'}
-                </button>
-                <span className="text-xs font-medium">{allFiltered.length} مورد قابل مشاهده</span>
-              </div>
-
-              <div className="flex gap-3 mt-3 max-h-[320px]">
-                {Object.entries(filtered).map(([group, items]) => (
-                  <div key={group} className="flex-1 flex flex-col border border-gray-200 rounded-xl overflow-hidden bg-white">
-                    <div
-                      onClick={() => toggleGroup(group)}
-                      className="sticky top-0 z-10 cursor-pointer bg-white/95 backdrop-blur-sm px-3 py-2 text-sm font-bold text-gray-700 flex justify-between items-center border-b hover:bg-gray-50 transition-colors"
-                    >
-                      <span className="flex items-center gap-2">
-                        <span className={clsx('px-2 py-1 rounded-lg text-xs font-semibold', GROUP_COLORS[group])}>
-                          {group}
-                        </span>
-                        <span className="text-gray-500 text-xs">({items.length})</span>
-                      </span>
-                      {/* آیکون چرخشی با استفاده از آبجکت اسپرداشده as any */}
-                      <motion.div 
-                        {...({
-                          animate: { rotate: collapsedGroups[group] ? 0 : 180 },
-                          transition: { duration: 0.2 }
-                        } as any)}
-                      >
-                        <ChevronDownIcon className="h-4 w-4 text-gray-400" />
-                      </motion.div>
-                    </div>
-
-                    {!collapsedGroups[group] && (
-                      <VirtualGroup items={items} isChecked={isChecked} />
+              {/* Header: Search & Actions */}
+              <div className="bg-white/50 p-6 space-y-4">
+                <div className="relative flex items-center">
+                  <MagnifyingGlassIcon className="absolute right-4 h-5 w-5 text-slate-400" />
+                  <input
+                    value={search}
+                    onChange={e => setSearch(e.target.value)}
+                    placeholder="جستجو در بین صدها مهارت..."
+                    className="w-full rounded-xl bg-slate-100/50 py-3 pr-12 pl-4 text-sm font-medium text-slate-700 outline-none transition-all focus:bg-white focus:ring-2 focus:ring-indigo-500/20"
+                  />
+                </div>
+                
+                <div className="flex items-center justify-between px-1">
+                  <div className="flex gap-4">
+                    <button type="button" onClick={handleToggleAll} className="text-xs font-bold text-indigo-600 hover:text-indigo-800 transition-colors">
+                      {selected.length === allFiltered.length ? 'لغو انتخاب همه' : 'انتخاب همه نتایج'}
+                    </button>
+                    {selected.length > 0 && (
+                      <button type="button" onClick={() => setSelected([])} className="text-xs font-bold text-rose-500">پاکسازی</button>
                     )}
+                  </div>
+                  <span className="text-[10px] font-black uppercase text-slate-400">{allFiltered.length} مورد یافت شد</span>
+                </div>
+              </div>
+
+              {/* Grid Columns */}
+              <div className="flex h-[400px] gap-2 p-4 pt-0">
+                {Object.entries(filtered).map(([group, items]) => (
+                  <div key={group} className="flex flex-1 flex-col rounded-2xl bg-slate-50/50 border border-slate-100 overflow-hidden">
+                    <button
+                      type="button"
+                      onClick={() => toggleGroup(group)}
+                      className="flex items-center justify-between p-3 transition-colors hover:bg-white"
+                    >
+                      <div className="flex items-center gap-2">
+                         <span className={clsx("h-2 w-2 rounded-full", GROUP_CONFIG[group]?.dot)} />
+                         <span className="text-xs font-black uppercase tracking-tight text-slate-600">{group}</span>
+                      </div>
+                      <motion.div {...({ animate: { rotate: collapsedGroups[group] ? 0 : 180 } } as any)}>
+                        <ChevronDownIcon className="h-4 w-4 text-slate-400" />
+                      </motion.div>
+                    </button>
+
+                    <div className="flex-1 relative">
+                      {!collapsedGroups[group] && (
+                        <VirtualGroup items={items} isChecked={isChecked} groupConfig={GROUP_CONFIG[group]} />
+                      )}
+                    </div>
                   </div>
                 ))}
               </div>
 
+              
+              {/* Footer: Selected Tags */}
+            <AnimatePresence>
               {selected.length > 0 && (
-                <div className="border-t border-gray-200 p-4 mt-3 max-h-[120px] overflow-y-auto">
-                  <p className="mb-2 text-sm font-bold text-gray-600">انتخاب شده ({selected.length})</p>
-                  <div className="flex flex-wrap gap-2">
-                    {selected.slice(0, 15).map((item, idx) => (
+                <motion.div 
+                  {...({ 
+                    initial: { height: 0, opacity: 0 }, 
+                    animate: { height: 'auto', opacity: 1 }, 
+                    exit: { height: 0, opacity: 0 } 
+                  } as any)}
+                  className="border-t border-slate-100 bg-slate-50/80 p-5 overflow-hidden"
+                >
+                  <div className="flex flex-wrap items-center gap-2">
+                    {/* رندر کردن فقط ۱۰ مورد اول */}
+                    {selected.slice(0, 10).map((item, idx) => (
                       <motion.span
                         key={item.id}
                         {...({
-                          initial: { opacity: 0, scale: 0.9 },
+                          initial: { opacity: 0, scale: 0.8 },
                           animate: { opacity: 1, scale: 1 },
-                          transition: { delay: idx * 0.05 }
+                          transition: { delay: idx * 0.02 }
                         } as any)}
                         className={clsx(
-                          'flex items-center gap-1 rounded-full px-3 py-1 text-xs font-medium transition-all border',
-                          GROUP_COLORS[item.group]
+                          'flex items-center gap-2 rounded-lg px-3 py-1.5 text-xs font-bold shadow-sm ring-1 ring-inset ring-black/5',
+                          GROUP_CONFIG[item.group]?.bg,
+                          GROUP_CONFIG[item.group]?.text
                         )}
                       >
                         {item.label}
-                        <button
+                        <button 
                           type="button"
-                          onClick={(e) => handleRemoveItem(e, item.id)}
-                          className="p-0.5 -mr-1 rounded-full hover:bg-black/10"
+                          onClick={(e) => handleRemoveItem(e, item.id)} 
+                          className="hover:bg-black/10 rounded-full p-0.5 transition-colors"
                         >
-                          <XMarkIcon className="h-3 w-3" />
+                          <XMarkIcon className="h-3.5 w-3.5" />
                         </button>
                       </motion.span>
                     ))}
+
+                    {/* نمایش تعداد باقی‌مانده */}
+                    {selected.length > 10 && (
+                      <motion.div
+                        {...({ initial: { opacity: 0 }, animate: { opacity: 1 } } as any)}
+                        className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-white border border-slate-200 shadow-sm"
+                      >
+                        <span className="text-[11px] font-black text-slate-500">
+                          +{selected.length - 10} مورد دیگر
+                        </span>
+                        <button 
+                          type="button"
+                          onClick={() => setSelected([])}
+                          className="text-[10px] font-bold text-rose-500 hover:underline border-r border-slate-200 pr-2 mr-1"
+                        >
+                          لغو همه
+                        </button>
+                      </motion.div>
+                    )}
                   </div>
-                </div>
+                </motion.div>
               )}
+            </AnimatePresence>
             </Listbox.Options>
           </Transition>
         </div>
@@ -192,18 +222,18 @@ export default function AdvancedDropdown() {
   );
 }
 
-function VirtualGroup({ items, isChecked }: { items: Option[]; isChecked: (id: number) => boolean }) {
+function VirtualGroup({ items, isChecked, groupConfig }: { items: Option[]; isChecked: (id: number) => boolean; groupConfig: any }) {
   const parentRef = useRef<HTMLDivElement>(null);
   const virtualizer = useVirtualizer({
     count: items.length,
     getScrollElement: () => parentRef.current,
-    estimateSize: () => 44,
-    overscan: 5,
+    estimateSize: () => 48,
+    overscan: 10,
   });
 
   return (
-    <div ref={parentRef} className="flex-1 overflow-auto bg-white">
-      <div style={{ height: `${virtualizer.getTotalSize()}px`, position: 'relative', width: '100%' }}>
+    <div ref={parentRef} className="absolute inset-0 overflow-auto scrollbar-hide">
+      <div style={{ height: `${virtualizer.getTotalSize()}px`, width: '100%', position: 'relative' }}>
         {virtualizer.getVirtualItems().map((row) => {
           const item = items[row.index];
           const checked = isChecked(item.id);
@@ -217,27 +247,27 @@ function VirtualGroup({ items, isChecked }: { items: Option[]; isChecked: (id: n
               {({ active }) => (
                 <motion.div
                   {...({
-                    initial: { opacity: 0, x: -10 },
-                    animate: { opacity: 1, x: 0 },
-                    transition: { duration: 0.15 }
+                    initial: { opacity: 0 },
+                    animate: { opacity: 1 },
                   } as any)}
                   className={clsx(
-                    'flex cursor-pointer items-center justify-between px-3 py-2 text-sm border-b border-gray-100 transition-colors',
-                    active ? 'bg-indigo-50' : 'bg-white',
-                    checked ? 'text-indigo-700 font-semibold' : 'text-gray-700'
+                    'absolute top-0 right-0 flex w-full cursor-pointer items-center justify-between px-4 py-3 text-sm transition-all duration-200',
+                    active ? 'bg-white shadow-sm z-10' : 'bg-transparent',
+                    checked ? 'text-indigo-600' : 'text-slate-500'
                   )}
                   style={{
-                    position: 'absolute',
-                    top: 0,
-                    left: 0,
-                    width: '100%',
                     height: `${row.size}px`,
                     transform: `translateY(${row.start}px)`,
                   }}
                 >
-                  <span className="flex items-center gap-2 truncate">
-                    {checked && <CheckIcon className="h-4 w-4 text-indigo-500 shrink-0" />}
-                    <span className="truncate">{item.label}</span>
+                  <span className="flex items-center gap-3 truncate font-medium">
+                    <div className={clsx(
+                      "flex h-5 w-5 items-center justify-center rounded-md border-2 transition-all",
+                      checked ? "border-indigo-500 bg-indigo-500 shadow-lg shadow-indigo-200" : "border-slate-200"
+                    )}>
+                      {checked && <CheckIcon className="h-3.5 w-3.5 text-white stroke-[3px]" />}
+                    </div>
+                    {item.label}
                   </span>
                 </motion.div>
               )}
